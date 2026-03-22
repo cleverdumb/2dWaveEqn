@@ -26,7 +26,7 @@
 
             let damping = 1;
 
-            let useMur = true;
+            let useMur = false;
 
             for (let y=0; y<ch; y++) {
                 grid.push([]);
@@ -62,17 +62,21 @@
             }
 
             function isWall(x, y) {
-                return x == 250 && !((y > 125 && y < 140) || (y > 160 && y < 175));
-                // return false;
+                // return x == 250 && !((y > 125 && y < 140) || (y > 160 && y < 175));
+                // return x == 250 && !(y > 145 && y < 155);
+                return false;
             }
 
-            let fixed = ['150-150']
+            let fixed = [
+                // '150-150'
+                // '350-350'
+            ]
 
-            let walls = [];
+            // let walls = [];
 
-            for (let y=0; y<ch; y++) {
-                walls.push(`${300}-${y}`)
-            }
+            // for (let y=0; y<ch; y++) {
+            //     walls.push(`${300}-${y}`)
+            // }
 
             function updateCell(x, y) {
                 grid[y][x] = (C * C * (oldGrid[y][x+1] + oldGrid[y][x-1] + oldGrid[y-1][x] + oldGrid[y+1][x] - 4 * oldGrid[y][x]) + 2 * oldGrid[y][x] - olderGrid[y][x]) * damping;
@@ -118,9 +122,14 @@
                 max = 0;
                 min = 0;
 
-                oldGrid[150][150] = Math.round(Math.cos(t*freq/180*Math.PI) * mag);
+                if (t < 270/freq) {
+                // if (true) {
+                    oldGrid[150][150] = Math.round(Math.cos(t*freq/180*Math.PI) * mag);
+                } else {
+                    oldGrid[150][150] = 0;
+                }
                 // console.log(Math.round(Math.cos(t*freq/180*Math.PI) * mag));
-                // oldGrid[350][350] = Math.round(Math.cos(t*freq/180*Math.PI) * mag);
+                // oldGrid[350][350] = -Math.round(Math.cos(t*freq/180*Math.PI) * mag);
 
                 for (let y=0; y<ch; y++) {
                     if (isWall(250, y)) {
