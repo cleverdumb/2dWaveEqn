@@ -11,7 +11,7 @@
             let cw = 500;
             let ch = 500;
 
-            cvs.width = cw;
+            cvs.width = cw + 200;
             cvs.height = ch;
             cvs.style.border = '1px solid black';
 
@@ -25,6 +25,8 @@
             let min = 0;
 
             let damping = 1;
+
+            let useMur = true;
 
             for (let y=0; y<ch; y++) {
                 grid.push([]);
@@ -61,6 +63,7 @@
 
             function isWall(x, y) {
                 return x == 250 && !((y > 125 && y < 140) || (y > 160 && y < 175));
+                // return false;
             }
 
             let fixed = ['150-150']
@@ -78,6 +81,30 @@
                 if (grid[y][x] > max) max = grid[y][x];
                 if (grid[y][x] < min) min = grid[y][x];
                 // }
+            }
+
+            function updateLeft() {
+                for (let y=0; y<ch; y++) {
+                    grid[y][0] = oldGrid[y][1] - (1-C)/(1+C)*(grid[y][1] - oldGrid[y][0]);
+                }
+            }
+
+            function updateRight() {
+                for (let y=0; y<ch; y++) {
+                    grid[y][cw-1] = oldGrid[y][cw-2] - (1-C)/(1+C)*(grid[y][cw-2] - oldGrid[y][cw-1]);
+                }
+            }
+
+            function updateTop() {
+                for (let x=0; x<cw; x++) {
+                    grid[0][x] = oldGrid[1][x] - (1-C)/(1+C)*(grid[1][x] - oldGrid[0][x]);
+                }
+            }
+
+            function updateBottom() {
+                for (let x=0; x<cw; x++) {
+                    grid[ch-1][x] = oldGrid[ch-2][x] - (1-C)/(1+C)*(grid[ch-2][x] - oldGrid[ch-1][x]);
+                }
             }
 
             let t = 0;
@@ -112,10 +139,36 @@
                     }
                 }
 
+                if (useMur) {
+                    updateLeft();
+                    updateRight();
+                    updateTop();
+                    updateBottom();
+                }
+
                 render();
+
+                // frame();
             }
 
-            // let thresh = 1;
+            function setColor(x, mult) {
+                if (x > 0) {
+                    ctx.fillStyle = `rgb(${Math.round(x/mag*mult * 255)}, 0, 0)`
+                } else if (x < 0) {
+                    ctx.fillStyle = `rgb(0, 0, ${Math.round(-x/mag*mult * 255)})`
+                } else {
+                    ctx.fillStyle = 'black';
+                }
+            }
+
+            let thresh = 1;
+
+            let screen = [];
+            for (let y=0; y<ch; y++) screen.push(0);
+
+            let screenStarted = false;
+            let first;
+            let screenX = 480;
 
             function render() {
                 grid.forEach((y, yi) => {
@@ -123,13 +176,7 @@
                         if (isWall(xi, yi)) {
                             ctx.fillStyle = 'green';
                         } else {
-                            if (x > 0) {
-                                ctx.fillStyle = `rgb(${Math.round(x/mag*10 * 255)}, 0, 0)`
-                            } else if (x < 0) {
-                                ctx.fillStyle = `rgb(0, 0, ${Math.round(-x/mag*10 * 255)})`
-                            } else {
-                                ctx.fillStyle = 'black';
-                            }
+                            setColor(x, 10);
                         }
 
                         // if (x > thresh) ctx.fillStyle = 'red';
@@ -139,9 +186,26 @@
                         ctx.fillRect(xi, yi, 1, 1);
                     })
                 })
+
+                if (!screenStarted && Math.abs(grid[150][screenX]) > mag/1000) {
+                    screenStarted = true;
+                    first = t-1;
+                }
+
+                if (screenStarted) {
+                    for (let y=0; y<ch; y++) {
+                        screen[y] += (Math.abs(grid[y][screenX]) - screen[y])/(t-first);
+
+                        setColor(screen[y], 50);
+
+                        ctx.fillRect(600, y, 10, 1);
+                    }
+                }
             }
 
             setInterval(frame, 10);
+
+            // frame();
         </script>
     </body>
 </html>
