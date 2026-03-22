@@ -4,6 +4,8 @@
     </head>
     <body>
         <canvas id='cvs'></canvas>
+        <button onmousedown="brighten = true" onmouseup="brighten = false; console.log('mouseup brighten')">brighten</button>
+        <button onmousedown="darken = true" onmouseup="darken = false">darken</button>
         <script>
             const cvs = document.getElementById('cvs');
             const ctx = cvs.getContext('2d');
@@ -19,14 +21,14 @@
             let oldGrid = [];
             let olderGrid = [];
 
-            let C = 0.5;
+            let brighten = false;
+            let darken = false;
 
-            let max = 10;
-            let min = 0;
+            let C = 0.5;
 
             let damping = 1;
 
-            let useMur = false;
+            let useMur = true;
 
             for (let y=0; y<ch; y++) {
                 grid.push([]);
@@ -39,11 +41,14 @@
                 }
             }
 
-            let mag = 1000000
+            let mag = 1000000;
 
-            grid[150][150] = mag;
-            oldGrid[150][150] = mag;
-            olderGrid[150][150] = mag;
+            let max = 90000;
+            let min = -90000;
+
+            // grid[150][150] = mag;
+            // oldGrid[150][150] = mag;
+            // olderGrid[150][150] = mag;
 
             // grid[350][350] = mag / 2;
             // oldGrid[350][350] = mag / 2;
@@ -57,14 +62,22 @@
             //     }
             // }
 
+            function between(v, min, max) {
+                return v < max && v > min;
+            }
+
             function inGrid(x, y) {
                 return x > 0 && y > 0 && x < cw-1 && y < ch-1;
             }
 
             function isWall(x, y) {
                 // return x == 250 && !((y > 125 && y < 140) || (y > 160 && y < 175));
-                // return x == 250 && !(y > 145 && y < 155);
-                return false;
+                return (x == 100 && !(between(y, 245, 255))) || (x == 300 && !(between(y, 215, 225) || between(y, 275, 285)));
+                // return false;
+            }
+
+            function isUpdate(x, y) {
+                return x != 0 || y < 100 || y > 400;
             }
 
             let fixed = [
@@ -82,8 +95,8 @@
                 grid[y][x] = (C * C * (oldGrid[y][x+1] + oldGrid[y][x-1] + oldGrid[y-1][x] + oldGrid[y+1][x] - 4 * oldGrid[y][x]) + 2 * oldGrid[y][x] - olderGrid[y][x]) * damping;
 
                 // if (x != 250 || y != 250) {
-                if (grid[y][x] > max) max = grid[y][x];
-                if (grid[y][x] < min) min = grid[y][x];
+                // if (grid[y][x] > max) max = grid[y][x];
+                // if (grid[y][x] < min) min = grid[y][x];
                 // }
             }
 
@@ -116,34 +129,52 @@
 
             function frame() {
                 t++;
+
+                if (darken) {
+                    max += 5000;
+                    min -= 5000;
+                }
+                if (brighten) {
+                    max -= 5000;
+                    max = Math.max(0, max);
+                    min -= 5000;
+                    min = Math.min(-1, min);
+                }
                 olderGrid = structuredClone(oldGrid);
                 oldGrid = structuredClone(grid);
 
-                max = 0;
-                min = 0;
+                // max = 0;
+                // min = 0;
 
-                if (t < 270/freq) {
-                // if (true) {
-                    oldGrid[150][150] = Math.round(Math.cos(t*freq/180*Math.PI) * mag);
-                } else {
-                    oldGrid[150][150] = 0;
-                }
+                // if (t < 270/freq) {
+                // // if (true) {
+                //     oldGrid[150][150] = Math.round(Math.cos(t*freq/180*Math.PI) * mag);
+                // } else {
+                //     oldGrid[150][150] = 0;
+                // }
                 // console.log(Math.round(Math.cos(t*freq/180*Math.PI) * mag));
                 // oldGrid[350][350] = -Math.round(Math.cos(t*freq/180*Math.PI) * mag);
 
+                for (let y=100; y<400; y++) {
+                    oldGrid[y][0] = Math.round(Math.cos(t*freq/180*Math.PI) * mag)
+                }
+
                 for (let y=0; y<ch; y++) {
-                    if (isWall(250, y)) {
-                        oldGrid[y][250] = 0;
+                    if (isWall(100, y)) {
+                        oldGrid[y][100] = 0;
+                    }
+                    if (isWall(300, y)) {
+                        oldGrid[y][300] = 0;
                     }
                 }
 
                 for (let x=1; x<cw-1; x++) {
                     for (let y=1; y<ch-1; y++) {
-                        if (!fixed.includes(`${x}-${y}`) && !isWall(x, y)) {
+                        if (!fixed.includes(`${x}-${y}`) && !isWall(x, y) && isUpdate(x, y)) {
                             updateCell(x, y);
                         } else {
-                            if (grid[y][x] > max) max = grid[y][x];
-                            if (grid[y][x] < min) min = grid[y][x];
+                            // if (grid[y][x] > max) max = grid[y][x];
+                            // if (grid[y][x] < min) min = grid[y][x];
                         }
                     }
                 }
@@ -161,10 +192,10 @@
             }
 
             function setColor(x, mult) {
-                if (x > 0) {
-                    ctx.fillStyle = `rgb(${Math.round(x/mag*mult * 255)}, 0, 0)`
-                } else if (x < 0) {
-                    ctx.fillStyle = `rgb(0, 0, ${Math.round(-x/mag*mult * 255)})`
+                if (x > 100) {
+                    ctx.fillStyle = `rgb(${Math.round(x/max * 255)}, 0, 0)`
+                } else if (x < -100) {
+                    ctx.fillStyle = `rgb(0, 0, ${Math.round(x/min * 255)})`
                 } else {
                     ctx.fillStyle = 'black';
                 }
