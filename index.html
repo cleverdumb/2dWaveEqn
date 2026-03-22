@@ -1,0 +1,147 @@
+<html>
+    <head>
+        <title>2d wave eqn</title>
+    </head>
+    <body>
+        <canvas id='cvs'></canvas>
+        <script>
+            const cvs = document.getElementById('cvs');
+            const ctx = cvs.getContext('2d');
+
+            let cw = 500;
+            let ch = 500;
+
+            cvs.width = cw;
+            cvs.height = ch;
+            cvs.style.border = '1px solid black';
+
+            let grid = [];
+            let oldGrid = [];
+            let olderGrid = [];
+
+            let C = 0.5;
+
+            let max = 10;
+            let min = 0;
+
+            let damping = 1;
+
+            for (let y=0; y<ch; y++) {
+                grid.push([]);
+                oldGrid.push([]);
+                olderGrid.push([]);
+                for (let x=0; x<ch; x++) {
+                    grid[y].push(0);
+                    oldGrid[y].push(0);
+                    olderGrid[y].push(0);
+                }
+            }
+
+            let mag = 1000000
+
+            grid[150][150] = mag;
+            oldGrid[150][150] = mag;
+            olderGrid[150][150] = mag;
+
+            // grid[350][350] = mag / 2;
+            // oldGrid[350][350] = mag / 2;
+            // olderGrid[350][350] = mag / 2;
+
+            // for (let x = 250; x <=250; x++) {
+            //     for (let y = 250; y <= 250; y++) {
+            //         grid[y][x] = mag;
+            //         oldGrid[y][x] = mag;
+            //         olderGrid[y][x] = mag;
+            //     }
+            // }
+
+            function inGrid(x, y) {
+                return x > 0 && y > 0 && x < cw-1 && y < ch-1;
+            }
+
+            function isWall(x, y) {
+                return x == 250 && !((y > 125 && y < 140) || (y > 160 && y < 175));
+            }
+
+            let fixed = ['150-150']
+
+            let walls = [];
+
+            for (let y=0; y<ch; y++) {
+                walls.push(`${300}-${y}`)
+            }
+
+            function updateCell(x, y) {
+                grid[y][x] = (C * C * (oldGrid[y][x+1] + oldGrid[y][x-1] + oldGrid[y-1][x] + oldGrid[y+1][x] - 4 * oldGrid[y][x]) + 2 * oldGrid[y][x] - olderGrid[y][x]) * damping;
+
+                // if (x != 250 || y != 250) {
+                if (grid[y][x] > max) max = grid[y][x];
+                if (grid[y][x] < min) min = grid[y][x];
+                // }
+            }
+
+            let t = 0;
+            let freq = 10;
+
+            function frame() {
+                t++;
+                olderGrid = structuredClone(oldGrid);
+                oldGrid = structuredClone(grid);
+
+                max = 0;
+                min = 0;
+
+                oldGrid[150][150] = Math.round(Math.cos(t*freq/180*Math.PI) * mag);
+                // console.log(Math.round(Math.cos(t*freq/180*Math.PI) * mag));
+                // oldGrid[350][350] = Math.round(Math.cos(t*freq/180*Math.PI) * mag);
+
+                for (let y=0; y<ch; y++) {
+                    if (isWall(250, y)) {
+                        oldGrid[y][250] = 0;
+                    }
+                }
+
+                for (let x=1; x<cw-1; x++) {
+                    for (let y=1; y<ch-1; y++) {
+                        if (!fixed.includes(`${x}-${y}`) && !isWall(x, y)) {
+                            updateCell(x, y);
+                        } else {
+                            if (grid[y][x] > max) max = grid[y][x];
+                            if (grid[y][x] < min) min = grid[y][x];
+                        }
+                    }
+                }
+
+                render();
+            }
+
+            // let thresh = 1;
+
+            function render() {
+                grid.forEach((y, yi) => {
+                    y.forEach((x, xi) => {
+                        if (isWall(xi, yi)) {
+                            ctx.fillStyle = 'green';
+                        } else {
+                            if (x > 0) {
+                                ctx.fillStyle = `rgb(${Math.round(x/mag*10 * 255)}, 0, 0)`
+                            } else if (x < 0) {
+                                ctx.fillStyle = `rgb(0, 0, ${Math.round(-x/mag*10 * 255)})`
+                            } else {
+                                ctx.fillStyle = 'black';
+                            }
+                        }
+
+                        // if (x > thresh) ctx.fillStyle = 'red';
+                        // else if (x < thresh) ctx.fillStyle = 'blue';
+                        // else {ctx.fillStyle = 'black'};
+
+                        ctx.fillRect(xi, yi, 1, 1);
+                    })
+                })
+            }
+
+            setInterval(frame, 10);
+        </script>
+    </body>
+</html>
