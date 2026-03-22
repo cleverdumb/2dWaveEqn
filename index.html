@@ -137,7 +137,7 @@
                 if (brighten) {
                     max -= 5000;
                     max = Math.max(0, max);
-                    min -= 5000;
+                    min += 5000;
                     min = Math.min(-1, min);
                 }
                 olderGrid = structuredClone(oldGrid);
@@ -210,6 +210,11 @@
             let first;
             let screenX = 480;
 
+            cvs.addEventListener('mousedown', e=>{
+                screenStarted = true;
+                first = t-1;
+            })
+
             function render() {
                 grid.forEach((y, yi) => {
                     y.forEach((x, xi) => {
@@ -227,18 +232,23 @@
                     })
                 })
 
-                if (!screenStarted && Math.abs(grid[150][screenX]) > mag/1000) {
-                    screenStarted = true;
-                    first = t-1;
-                }
+                // if (!screenStarted && Math.abs(grid[150][screenX]) > mag/1000) {
+                //     screenStarted = true;
+                //     first = t-1;
+                // }
 
                 if (screenStarted) {
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(500, 0, 500, ch);
+
                     for (let y=0; y<ch; y++) {
                         screen[y] += (Math.abs(grid[y][screenX]) - screen[y])/(t-first);
 
                         setColor(screen[y], 50);
 
-                        ctx.fillRect(600, y, 10, 1);
+                        // ctx.clearRect(500, 0, 200, ch);
+
+                        ctx.fillRect(520, y, screen[y]/max * 150, 1);
                     }
                 }
             }
