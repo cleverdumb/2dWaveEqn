@@ -6,7 +6,6 @@
         <canvas id='cvs'></canvas>
         <button onmousedown="brighten = true" onmouseup="brighten = false; console.log('mouseup brighten')">brighten</button>
         <button onmousedown="darken = true" onmouseup="darken = false">darken</button>
-        <input type="range" min = 200 max = 400 onchange='slitX = parseInt(this.value)'>
         <script>
             const cvs = document.getElementById('cvs');
             const ctx = cvs.getContext('2d');
@@ -44,10 +43,8 @@
 
             let mag = 1000000;
 
-            let max = 15000;
-            let min = -15000;
-
-            let slitX = 300
+            let max = 90000;
+            let min = -90000;
 
             // grid[150][150] = mag;
             // oldGrid[150][150] = mag;
@@ -75,7 +72,7 @@
 
             function isWall(x, y) {
                 // return x == 250 && !((y > 125 && y < 140) || (y > 160 && y < 175));
-                return (x == 100 && !(between(y, 245, 255))) || (x == slitX && !(between(y, 218, 222) || between(y, 278, 282)));
+                return (x == 100 && !(between(y, 245, 255))) || (x == 300 && !(between(y, 215, 225) || between(y, 275, 285)));
                 // return false;
             }
 
@@ -166,8 +163,8 @@
                     if (isWall(100, y)) {
                         oldGrid[y][100] = 0;
                     }
-                    if (isWall(slitX, y)) {
-                        oldGrid[y][slitX] = 0;
+                    if (isWall(300, y)) {
+                        oldGrid[y][300] = 0;
                     }
                 }
 
@@ -207,7 +204,7 @@
             let thresh = 1;
 
             let screen = [];
-            // for (let y=0; y<ch; y++) screen.push(0);
+            for (let y=0; y<ch; y++) screen.push(0);
 
             let screenStarted = false;
             let first;
@@ -216,10 +213,6 @@
             cvs.addEventListener('mousedown', e=>{
                 screenStarted = true;
                 first = t-1;
-
-                screen = [];
-
-                for (let y=0; y<ch; y++) screen.push(0);
             })
 
             function render() {
@@ -256,31 +249,6 @@
                         // ctx.clearRect(500, 0, 200, ch);
 
                         ctx.fillRect(520, y, screen[y]/max * 150, 1);
-                    }
-                }
-
-                for (let a = -89; a < 90; a++) {
-                    if (a % 10 == 0) {
-                        ctx.beginPath();
-                        ctx.moveTo(slitX, 250);
-                        ctx.lineTo(slitX + (500 - slitX) * Math.cos(a/180*Math.PI), 250 + (500 - slitX) * Math.sin(a/180*Math.PI));
-                        ctx.strokeStyle = 'white';
-                        ctx.stroke();
-                        ctx.closePath();
-                    } else if (a % 5 == 0) {
-                        ctx.beginPath();
-                        ctx.moveTo(slitX + (500 - slitX -30) * Math.cos(a/180*Math.PI), 250 + (500 - slitX-30) * Math.sin(a/180*Math.PI));
-                        ctx.lineTo(slitX + (500 - slitX-25) * Math.cos(a/180*Math.PI), 250 + (500 - slitX-25) * Math.sin(a/180*Math.PI));
-                        ctx.strokeStyle = 'white';
-                        ctx.stroke();
-                        ctx.closePath();
-                    } else {
-                        ctx.beginPath();
-                        ctx.moveTo(slitX + (500 - slitX -30) * Math.cos(a/180*Math.PI), 250 + (500 - slitX-30) * Math.sin(a/180*Math.PI));
-                        ctx.lineTo(slitX + (500 - slitX-28) * Math.cos(a/180*Math.PI), 250 + (500 - slitX-28) * Math.sin(a/180*Math.PI));
-                        ctx.strokeStyle = 'white';
-                        ctx.stroke();
-                        ctx.closePath();
                     }
                 }
             }
